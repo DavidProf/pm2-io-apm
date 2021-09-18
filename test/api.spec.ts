@@ -171,6 +171,7 @@ describe('API', function () {
           assert(!!res.data.message.match(/Cannot read property/))
         }
         if (res === 'callback') {
+          console.log(res)
           done()
         }
       })

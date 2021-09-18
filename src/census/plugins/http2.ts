@@ -108,8 +108,10 @@ export class Http2Plugin extends HttpPlugin {
               plugin.getMakeHttp2RequestTraceFunction(
                   request, headers, authority, plugin))
         } else {
-          const span = plugin.tracer.startChildSpan(
-              traceOptions.name, traceOptions.kind)
+          const span = plugin.tracer.startChildSpan({
+              name: traceOptions.name,
+              kind: traceOptions.kind
+          })
           return (plugin.getMakeHttp2RequestTraceFunction(
               request, headers, authority, plugin))(span)
         }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CoreTracer, RootSpan, SpanEventListener, logger } from '@opencensus/core'
+import { CoreTracer, Span, SpanEventListener, logger } from '@opencensus/core'
 import * as assert from 'assert'
 import * as express from 'express'
 import * as http from 'http'
@@ -25,12 +25,12 @@ import { plugin } from '../net'
 
 /** Collects ended root spans to allow for later analysis. */
 class RootSpanVerifier implements SpanEventListener {
-  endedRootSpans: RootSpan[] = []
+  endedRootSpans: Span[] = []
 
-  onStartSpan (span: RootSpan): void {
+  onStartSpan (span: Span): void {
     return
   }
-  onEndSpan (root: RootSpan) {
+  onEndSpan (root: Span) {
     this.endedRootSpans.push(root)
   }
 }

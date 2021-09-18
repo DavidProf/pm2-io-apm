@@ -1,4 +1,4 @@
-import { CoreTracer, RootSpan, SpanEventListener, logger, SpanKind } from '@opencensus/core'
+import { CoreTracer, Span, SpanEventListener, logger, SpanKind } from '@opencensus/core'
 import * as assert from 'assert'
 import * as path from 'path'
 import * as pg from 'pg'
@@ -7,12 +7,12 @@ import { plugin } from '../pg'
 
 /** Collects ended root spans to allow for later analysis. */
 class RootSpanVerifier implements SpanEventListener {
-  endedRootSpans: RootSpan[] = []
+  endedRootSpans: Span[] = []
 
-  onStartSpan (span: RootSpan): void {
+  onStartSpan (span: Span): void {
     return
   }
-  onEndSpan (root: RootSpan) {
+  onEndSpan (root: Span) {
     this.endedRootSpans.push(root)
   }
 }
@@ -102,7 +102,7 @@ describe('PGPlugin', () => {
   /** Should intercept query */
   describe('Instrumenting connection operations', () => {
     it('should create a child span for select with callback', done => {
-      tracer.startRootSpan({ name: 'selectCallbackRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'selectCallbackRootSpan' }, (rootSpan: Span) => {
         const q = 'SELECT 1 as value'
         client.query(q, (err, result) => {
           assert.strictEqual(result.rows[0].value, 1)
@@ -119,7 +119,7 @@ describe('PGPlugin', () => {
     })
 
     it('should create a span for select with promise', done => {
-      tracer.startRootSpan({ name: 'selectPromRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'selectPromRootSpan' }, async (rootSpan: Span) => {
         const q = 'SELECT 2 as value'
         const result = await client.query(q)
         assert.strictEqual(result.rows[0].value, 2)
@@ -134,7 +134,7 @@ describe('PGPlugin', () => {
     })
 
     it('should create a child span for errored query', done => {
-      tracer.startRootSpan({ name: 'errorCallbackRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'errorCallbackRootSpan' }, (rootSpan: Span) => {
         const q = 'SELECT * FROM notexisttable'
         client.query(q, (err, result) => {
           assert.ok(err instanceof Error)
@@ -151,7 +151,7 @@ describe('PGPlugin', () => {
     })
 
     it('should create a child span for select with eventemitter', done => {
-      tracer.startRootSpan({ name: 'selectEventRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'selectEventRootSpan' }, (rootSpan: Span) => {
         const q = 'SELECT 4 as value'
         // Must use new Query for eventemitter
         // https://node-postgres.com/guides/upgrading#client-query-submittable-

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CoreTracer, RootSpan, SpanEventListener, logger, SpanKind } from '@opencensus/core'
+import { CoreTracer, Span, SpanEventListener, logger, SpanKind } from '@opencensus/core'
 import * as assert from 'assert'
 import * as mongodb from 'mongodb-core'
 import { parse } from 'url'
@@ -28,12 +28,12 @@ export type MongoDBAccess = {
 
 /** Collects ended root spans to allow for later analysis. */
 class RootSpanVerifier implements SpanEventListener {
-  endedRootSpans: RootSpan[] = []
+  endedRootSpans: Span[] = []
 
-  onStartSpan (span: RootSpan): void {
+  onStartSpan (span: Span): void {
     return
   }
-  onEndSpan (root: RootSpan) {
+  onEndSpan (root: Span) {
     this.endedRootSpans.push(root)
   }
 }
@@ -139,7 +139,7 @@ describe('MongoDBPlugin', () => {
     it('should create a child span for insert', (done) => {
       const insertData = [{ a: 1 }, { a: 2 }, { a: 3 }]
 
-      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: Span) => {
         client.insert(`${DB_NAME}.${COLLECTION_NAME}`, insertData, (err, result) => {
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
           rootSpan.end()
@@ -151,7 +151,7 @@ describe('MongoDBPlugin', () => {
     })
 
     it('should create a child span for update', (done) => {
-      tracer.startRootSpan({ name: 'updateRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'updateRootSpan' }, (rootSpan: Span) => {
         client.update(`${DB_NAME}.${COLLECTION_NAME}`, [ { q: { a: 2 }, u: { $set: { b: 1 } } }], (err, result) => {
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
           rootSpan.end()
@@ -163,7 +163,7 @@ describe('MongoDBPlugin', () => {
     })
 
     it('should create a child span for remove', (done) => {
-      tracer.startRootSpan({ name: 'removeRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'removeRootSpan' }, (rootSpan: Span) => {
         client.remove(`${DB_NAME}.${COLLECTION_NAME}`, [{ q: { a: 3 }, limit: 0 }], (err, result) => {
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
           rootSpan.end()
@@ -178,7 +178,7 @@ describe('MongoDBPlugin', () => {
   /** Should intercept cursor */
   describe('Instrumenting cursor operations', () => {
     it('should create a child span for find', (done) => {
-      tracer.startRootSpan({ name: 'findRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'findRootSpan' }, (rootSpan: Span) => {
         client.cursor(`${DB_NAME}.${COLLECTION_NAME}`, {
           find: `${DB_NAME}.${COLLECTION_NAME}`,
           query: {}
@@ -196,7 +196,7 @@ describe('MongoDBPlugin', () => {
   /** Should intercept command */
   describe('Instrumenting command operations', () => {
     it('should create a child span for count command', (done) => {
-      tracer.startRootSpan({ name: 'indexRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'indexRootSpan' }, (rootSpan: Span) => {
         client.command(`${DB_NAME}.${COLLECTION_NAME}`, {  count: COLLECTION_NAME }, (err, result) => {
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
           rootSpan.end()
@@ -217,7 +217,7 @@ describe('MongoDBPlugin', () => {
     it('should not create a child span for query', (done) => {
       const insertData = [{ a: 1 }, { a: 2 }, { a: 3 }]
 
-      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: Span) => {
         client.insert(`${DB_NAME}.${COLLECTION_NAME}`, insertData, (err, result) => {
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
           rootSpan.end()
@@ -231,7 +231,7 @@ describe('MongoDBPlugin', () => {
     })
 
     it('should not create a child span for cursor', (done) => {
-      tracer.startRootSpan({ name: 'findRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'findRootSpan' }, (rootSpan: Span) => {
         client.cursor(`${DB_NAME}.${COLLECTION_NAME}`, {
           find: `${DB_NAME}.${COLLECTION_NAME}`,
           query: {}
@@ -248,7 +248,7 @@ describe('MongoDBPlugin', () => {
     })
 
     it('should not create a child span for command', (done) => {
-      tracer.startRootSpan({ name: 'indexRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'indexRootSpan' }, (rootSpan: Span) => {
         client.command(`${DB_NAME}.${COLLECTION_NAME}`, {  count: COLLECTION_NAME }, (err, result) => {
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
           rootSpan.end()

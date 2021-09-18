@@ -24,7 +24,7 @@ app.get('/', function (req, res) {
   http.get('http://localhost:' + (server.address() as AddressInfo).port + '/toto', (_) => {
     const tracer = pmx.getTracer()
     if (tracer === undefined) throw new Error('tracer undefined')
-    const customSpan = tracer.startChildSpan('customspan', SpanKind.CLIENT)
+    const customSpan = tracer.startChildSpan({ name: 'customspan', kind: SpanKind.CLIENT })
     customSpan.addAttribute('test', true)
     setTimeout(_ => {
       customSpan.end()

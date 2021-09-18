@@ -337,8 +337,10 @@ export class HttpPlugin extends BasePlugin {
               plugin.getMakeRequestTraceFunction(request, options, plugin))
         } else {
           plugin.logger.debug('outgoingRequest starting a child span')
-          const span = plugin.tracer.startChildSpan(
-              traceOptions.name, traceOptions.kind)
+          const span = plugin.tracer.startChildSpan({
+            name: traceOptions.name,
+            kind: traceOptions.kind
+          })
           return (plugin.getMakeRequestTraceFunction(request, options, plugin))(
               span)
         }
@@ -447,7 +449,7 @@ export class HttpPlugin extends BasePlugin {
   private createSpan<T> (options: TraceOptions, fn: (span: Span) => T): T {
     const forceChildspan = this.options.createSpanWithNet === true
     if (forceChildspan) {
-      const span = this.tracer.startChildSpan(options.name, options.kind)
+      const span = this.tracer.startChildSpan({ name: options.name, kind: options.kind })
       return fn(span)
     } else {
       return this.tracer.startRootSpan(options, fn)

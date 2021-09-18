@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CoreTracer, RootSpan, SpanEventListener, Span, logger, SpanKind } from '@opencensus/core'
+import { CoreTracer, SpanEventListener, Span, logger, SpanKind } from '@opencensus/core'
 import * as assert from 'assert'
 import * as ioredis from 'ioredis'
 
@@ -22,12 +22,12 @@ import { plugin, IORedisPluginConfig } from '../ioredis'
 
 /** Collects ended root spans to allow for later analysis. */
 class RootSpanVerifier implements SpanEventListener {
-  endedRootSpans: RootSpan[] = []
+  endedRootSpans: Span[] = []
 
-  onStartSpan (span: RootSpan): void {
+  onStartSpan (span: Span): void {
     return
   }
-  onEndSpan (root: RootSpan) {
+  onEndSpan (root: Span) {
     this.endedRootSpans.push(root)
   }
 }
@@ -114,7 +114,7 @@ describe('RedisPlugin', () => {
   /** Should intercept query */
   describe('Instrumenting query operations', () => {
     it('should create a child span for hset', (done) => {
-      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: Span) => {
         client.hset('hash', 'random', 'random', (err, result) => {
           assert.ifError(err)
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
@@ -129,7 +129,7 @@ describe('RedisPlugin', () => {
     })
 
     it('should create a child span for get', (done) => {
-      tracer.startRootSpan({ name: 'getRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'getRootSpan' }, (rootSpan: Span) => {
         client.get('test', (err, result) => {
           assert.ifError(err)
           assert.strictEqual(result, 'data')
@@ -145,7 +145,7 @@ describe('RedisPlugin', () => {
     })
 
     it('should create a child span for del', (done) => {
-      tracer.startRootSpan({ name: 'removeRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'removeRootSpan' }, async (rootSpan: Span) => {
         await client.del('test')
         assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
         rootSpan.end()
@@ -161,7 +161,7 @@ describe('RedisPlugin', () => {
       plugin.disable()
       const conf: IORedisPluginConfig = { detailedCommands: true }
       plugin.enable(ioredis, tracer, VERSION, conf, '')
-      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: Span) => {
         client.set('test', 'data', (err, result) => {
           assert.ifError(err)
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
@@ -183,7 +183,7 @@ describe('RedisPlugin', () => {
     })
 
     it('should not create a child span for insert', (done) => {
-      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, (rootSpan: Span) => {
         client.hset('hash', 'random', 'random', (err, result) => {
           assert.ifError(err)
           assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
@@ -197,7 +197,7 @@ describe('RedisPlugin', () => {
     })
 
     it('should not create a child span for get', (done) => {
-      tracer.startRootSpan({ name: 'getRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'getRootSpan' }, (rootSpan: Span) => {
         client.get('test', (err, result) => {
           assert.ifError(err)
           assert.strictEqual(result, 'data')
@@ -211,7 +211,7 @@ describe('RedisPlugin', () => {
     })
 
     it('should not create a child span for del', (done) => {
-      tracer.startRootSpan({ name: 'removeRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'removeRootSpan' }, async (rootSpan: Span) => {
         await client.del('test')
         assert.strictEqual(rootSpanVerifier.endedRootSpans.length, 0)
         rootSpan.end()

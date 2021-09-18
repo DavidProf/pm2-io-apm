@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CoreTracer, RootSpan, SpanEventListener, Span, logger, SpanKind } from '@opencensus/core'
+import { CoreTracer, SpanEventListener, Span, logger, SpanKind } from '@opencensus/core'
 import * as assert from 'assert'
 import * as vueServerRenderer from 'vue-server-renderer'
 import * as Vue from 'vue'
@@ -24,12 +24,12 @@ import { plugin } from '../vue'
 
 /** Collects ended root spans to allow for later analysis. */
 class RootSpanVerifier implements SpanEventListener {
-  endedRootSpans: RootSpan[] = []
+  endedRootSpans: Span[] = []
 
-  onStartSpan (span: RootSpan): void {
+  onStartSpan (span: Span): void {
     return
   }
-  onEndSpan (root: RootSpan) {
+  onEndSpan (root: Span) {
     this.endedRootSpans.push(root)
   }
 }
@@ -90,7 +90,7 @@ describe('VuePlugin', () => {
   /** Should intercept renderer */
   describe('Instrumenting normal renderer operations', () => {
     it('should create a child span for renderToString', (done) => {
-      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: Span) => {
         const renderer = vueServerRenderer.createRenderer()
         renderer.renderToString(vueVM, (err, html) => {
           assert.ifError(err)
@@ -107,7 +107,7 @@ describe('VuePlugin', () => {
   /** Should bundle renderer */
   describe('Instrumenting normal bundle operations', () => {
     it('should create a child span for renderToString', (done) => {
-      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: Span) => {
         const renderer = vueServerRenderer.createBundleRenderer(
           require('./fixtures/vue-ssr-bundle.json'),
           {
@@ -136,7 +136,7 @@ describe('VuePlugin', () => {
     })
 
     it('should not create a child span for renderToString', (done) => {
-      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: Span) => {
         const renderer = vueServerRenderer.createRenderer()
         renderer.renderToString(vueVM, (err, html) => {
           assert.ifError(err)
@@ -152,7 +152,7 @@ describe('VuePlugin', () => {
     })
 
     it('should not create a child span for renderToString', (done) => {
-      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'insertRootSpan' }, async (rootSpan: Span) => {
         const renderer = vueServerRenderer.createBundleRenderer(
           require(__dirname + '/fixtures/vue-ssr-bundle.json'),
           {

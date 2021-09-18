@@ -1,4 +1,4 @@
-import { CoreTracer, RootSpan, SpanEventListener, logger, SpanKind } from '@opencensus/core'
+import { CoreTracer, Span, SpanEventListener, logger, SpanKind } from '@opencensus/core'
 import * as assert from 'assert'
 import * as mysql from 'mysql'
 import * as path from 'path'
@@ -7,12 +7,12 @@ import { plugin } from '../mysql'
 
 /** Collects ended root spans to allow for later analysis. */
 class RootSpanVerifier implements SpanEventListener {
-  endedRootSpans: RootSpan[] = []
+  endedRootSpans: Span[] = []
 
-  onStartSpan (span: RootSpan): void {
+  onStartSpan (span: Span): void {
     return
   }
-  onEndSpan (root: RootSpan) {
+  onEndSpan (root: Span) {
     this.endedRootSpans.push(root)
   }
 }
@@ -124,7 +124,7 @@ describe('MysqlPlugin', () => {
   /** Should intercept query */
   describe('Instrumenting connection operations', () => {
     it('should create a child span for select', done => {
-      tracer.startRootSpan({ name: 'selectRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'selectRootSpan' }, (rootSpan: Span) => {
         const q = 'SELECT 1'
         client.query(q, (err, result) => {
           assert.strictEqual(result[0]['1'], 1)
@@ -141,7 +141,7 @@ describe('MysqlPlugin', () => {
     })
 
     it('should create a child span for errored query', done => {
-      tracer.startRootSpan({ name: 'errorRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'errorRootSpan' }, (rootSpan: Span) => {
         const q = 'SELECT * FROM notexisttable'
         client.query(q, (err, result) => {
           assert.ok(err instanceof Error)
@@ -160,7 +160,7 @@ describe('MysqlPlugin', () => {
 
   describe('instrumenting pool operations', () => {
     it('should create a child span for select', done => {
-      tracer.startRootSpan({ name: 'selectRootSpan' }, (rootSpan: RootSpan) => {
+      tracer.startRootSpan({ name: 'selectRootSpan' }, (rootSpan: Span) => {
         const q = 'SELECT 1'
         pool.getConnection((err, conn) => {
           assert.ifError(err)
